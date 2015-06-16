@@ -32,11 +32,11 @@
 			var posNew = e.clientY - posOldCorrection;
 			var posNewX = e.clientX - posOldCorrectionX;
 			
-			function offset(drag) {
+			var offset = function (drag) {
                 drag.offset({'top': posNew, 'left': posNewX});
             }
             
-            function correction() {
+            var correction = function () {
                 drag.css({'top':0});
 				posOld = drag.offset().top;
 				posOldCorrection = e.clientY - posOld;
