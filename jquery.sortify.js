@@ -2,35 +2,56 @@
 	
 	$.fn.sortify = function(){
     
-	function disableSelection(){
+	var disableSelection = function (){
 		return false;
 	}
 	
-	function insertBefore(drag) {
+	var insertBefore = function (drag) {
             drag.insertBefore(drag.prev().css({'top':-drag.height()}).animate({'top':0, 'left':0}, 100));
         }
         
-    function insertAfter(drag) {
+    var insertAfter = function (drag) {
             drag.insertAfter(drag.next().css({'top':drag.height()}).animate({'top':0, 'left':0}, 100));
         }
         
-    $(this).on('mousedown', function(e){
+        
+    $(this).on('mousedown touchstart', function(e){
         
 		var drag = $(this);
 		var posParentTop = drag.parent().offset().top;
 		var posParentBottom = posParentTop + drag.parent().height();
-		var windowHeight = $(window).height();
-		var windowWidth = $(window).width();
 		var posOld = drag.offset().top;
 		var posOldX = drag.offset().left;
-		var posOldCorrection = e.clientY - posOld;
-		var posOldCorrectionX = e.clientX - posOldX;
+		
+		if (/touch/.test(e.type)) {
+		    
+		    var touches = e.originalEvent.targetTouches[0];
+		    var posOldCorrection = touches.clientY - posOld;
+		    var posOldCorrectionX = touches.clientX - posOldX;
+		} else {
+		
+    		var posOldCorrection = e.clientY - posOld;
+    		var posOldCorrectionX = e.clientX - posOldX;
+		}
+		
         drag.addClass('dragActive');
         
         var mouseMove = function(e){
             
-			var posNew = e.clientY - posOldCorrection;
-			var posNewX = e.clientX - posOldCorrectionX;
+            e.preventDefault();
+            e.stopPropagation();
+            
+			if (/touch/.test(e.type)) {
+			    
+			    var touches = e.originalEvent.targetTouches[0];
+    			var posNew = touches.clientY - posOldCorrection;
+    			var posNewX = touches.clientX - posOldCorrectionX;
+			    
+			} else {    
+			
+    			var posNew = e.clientY - posOldCorrection;
+    			var posNewX = e.clientX - posOldCorrectionX;
+			}
 			
 			var offset = function (drag) {
                 drag.offset({'top': posNew, 'left': posNewX});
@@ -39,7 +60,12 @@
             var correction = function () {
                 drag.css({'top':0});
 				posOld = drag.offset().top;
-				posOldCorrection = e.clientY - posOld;
+				
+				if (/touch/.test(e.type)) {
+				    posOldCorrection = touches.clientY - posOld;
+				} else {
+				    posOldCorrection = e.clientY - posOld;
+				}
             }
 			
 			drag.css({'top': posNew - drag.height(), 'left': posNewX - drag.width()});
@@ -68,13 +94,13 @@
 		};
 		
 		var mouseUp = function(){
-			$(document).off('mousemove', mouseMove).off('mouseup', mouseUp).off('mousedown', disableSelection);
+			$(document).off('mousemove touchmove', mouseMove).off('mouseup touchend', mouseUp).off('mousedown touchstart', disableSelection);
             drag.animate({'top':0, 'left':0}, 100, function(){
 				drag.removeClass('dragActive');
 	        });
         };
 		
-		$(document).on('mousemove', mouseMove).on('mouseup', mouseUp).on('mousedown', disableSelection);
+		$(document).on('mousemove touchmove', mouseMove).on('mouseup touchend', mouseUp).on('mousedown touchstart', disableSelection);
         $(window).on('blur', mouseUp);
     });
     
